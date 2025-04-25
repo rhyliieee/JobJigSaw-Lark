@@ -6,10 +6,12 @@ import {
     JDWAPIPayload,
     ExistingJobOpenings,
     BulkCandidateUpload,
+    ProcessedResumeData,
+    MJCAPIStatus
   } from '../types';
-// import pdfParse from "pdf-parse";
+// import { extractPDFContent } from '@/utils';
 import axios from 'axios';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 // const pdf = require('pdf-parse');
   
@@ -22,10 +24,6 @@ import { toast, Toaster } from 'sonner';
     const apiHeaderName = import.meta.env.VITE_JDW_HEADER_NAME || 'DIREC-AI-JDW-API-KEY';
     const apiURL = import.meta.env.VITE_JDW_API_URL || 'http://localhost:8090';
     const apiKey = import.meta.env.VITE_JDW_API_KEY || 'jdw_d39_8bb3_4795_ae2e_a8ab6b526210'; 
-    
-    console.log(`---HEADER NAME: ${apiHeaderName}---`);
-    console.log(`---API URL: ${apiURL}---`);
-    console.log(`---API KEY: ${apiKey}---`);
 
     // Basic validation - ensure essential config is present
     if (!apiHeaderName || !apiURL || !apiKey) {
@@ -58,7 +56,6 @@ import { toast, Toaster } from 'sonner';
         }
       )
       console.log(`---RESPONSE FROM THE API: ${response.status}---`)
-      // console.log(`---RESPONSE DATA: ${JSON.stringify(response.data)}---`)
       
       // Check if the response indicates success (e.g., status 200 and data.status === 'ok')
       if (response.status !== 200 || response.data?.status !== 'ok') {
@@ -162,7 +159,6 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
       );
   
       console.log(`--- Job Status API Response Status: ${response.status} ---`);
-      // console.log(`---JOB STATUS API RESPONSE DATA: ${JSON.stringify(response.data)}---`);
   
       // Validate the response structure based on JobStatus interface
        if (!response.data || typeof response.data.status !== 'string') {
@@ -180,23 +176,19 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
     }
   }
   
-  
-  
   /**
    * GET API CONFIG FOR RESUME ANALYSIS
    */
   function getRARAPIConfig() {
-    const apiHeaderName = import.meta.env.RAR_HEADER_NAME || 'DIREC-AI-RAR-API-KEY';
-    const apiURL = import.meta.env.RAR_API_URL || 'http://localhost:8080';
-    const apiKey = import.meta.env.RAR_API_KEY || 'rar_c1a09171_ed574d67_af76_23b2b129b8'; 
+    const apiHeaderName = import.meta.env.VITE_RAR_HEADER_NAME || 'DIREC-AI-RAR-API-KEY';
+    const apiURL = import.meta.env.VITE_RAR_API_URL || 'http://localhost:8080';
+    const apiKey = import.meta.env.VITE_RAR_API_KEY || 'rar_c1a09171_ed574d67_af76_23b2b129b8'; 
   
     // Basic validation - ensure essential config is present
     if (!apiHeaderName || !apiURL || !apiKey) {
         console.error('API configuration is incomplete. Check environment variables RAR_HEADER_NAME, RAR_API_URL, RAR_API_KEY.');
         throw new Error('API configuration is incomplete.');
     }
-
-    console.log(`---RETURNING RAR CONFIG---`)
   
     return { apiURL, apiHeaderName, apiKey };
   }
@@ -209,7 +201,6 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
   export async function apiRARHealthCheck(): Promise<any> {
     try {
       const { apiURL, apiHeaderName, apiKey } = getRARAPIConfig();
-      console.log(`Performing health check on: ${apiURL}/ai/rar/v1/health`);
       
       // CALL THE API TO CHECK HEALTH STATUS
       const response = await axios.get(
@@ -221,8 +212,6 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
           }
         }
       )
-      console.log(`---RESPONSE FROM THE API: ${response.status}---`)
-      console.log(`---RESPONSE DATA: ${JSON.stringify(response.data)}---`)
       
       // Check if the response indicates success (e.g., status 200 and data.status === 'ok')
       if (response.status !== 200 || response.data?.status !== 'ok') {
@@ -235,6 +224,60 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
       throw new Error(`Failed to check API health on RAR Endpoint. Please ensure the API is running and configuration is correct. Details: ${error.message}`);
     }
   }
+
+
+  /**
+   * NEW: Sends raw resume files to the backend for processing.
+   * @param {File[]} resumeFiles - An array of raw File objects for the resumes.
+   * @returns {Promise<ProcessedResumeData[]>} A promise that resolves to an array of processed resume data.
+   * @throws {Error} If the API call fails.
+   */
+  export async function processResumesAPI(resumeFiles: File[]): Promise<ProcessedResumeData[]> {
+    if (!resumeFiles || resumeFiles.length === 0) {
+      console.warn("processResumesAPI called with no files.");
+      return []; // Return empty array if no files are provided
+    }
+
+    try {
+      // GET API CONFIGURATION (Assuming RAR config is appropriate)
+      const { apiURL, apiHeaderName, apiKey } = getRARAPIConfig();
+      const endpoint = `${apiURL}/ai/rar/v1/process_resumes`;
+      // console.log(`Sending ${resumeFiles.length} resumes for processing to: ${endpoint}`);
+
+      // PREPARE FORM DATA FOR FILE UPLOAD
+      const formData = new FormData();
+      resumeFiles.forEach((file) => {
+        formData.append('resumes', file, file.name); // Key must match backend File(...) parameter name
+      });
+
+      // CALL THE PROCESSING API
+      const response = await axios.post<ProcessedResumeData[]>(
+        endpoint,
+        formData, // Send FormData
+        {
+          headers: {
+            'Accept': 'application/json', // Expect JSON response
+            [apiHeaderName]: apiKey
+          }
+        }
+      );
+
+      // Basic validation
+      if (!Array.isArray(response.data)) {
+          throw new Error('Invalid response format from resume processing API.');
+      }
+
+      return response.data;
+
+    } catch (error: any) {
+      const errorDetail = error.response?.data?.detail || error.message || 'Unknown error during resume processing';
+      console.error('Error Processing Resumes via API:', errorDetail, error.response || error);
+      toast.error("Resume Processing Failed", { description: errorDetail });
+      // Re-throw a more specific error
+      throw new Error(`Failed to process resumes: ${errorDetail}`);
+    }
+  }
+
   
   /**
    * Initiates the job description writing process by sending files to the API.
@@ -247,44 +290,49 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
     candidates: BulkCandidateUpload[]
   ): Promise<InitialAPIResponse> {
     try {
-      // GET API CONFIGURATION
+
+      // --- Step 1: Process Resumes ---
+      console.log("Step 1: Processing resumes...");
+      const allResumeFiles: File[] = candidates.flatMap(c => c.resumeFile); // Collect all files
+
+      if (allResumeFiles.length === 0) {
+          throw new Error("No resume files found to process.");
+      }
+
+      const processedResumes = await processResumesAPI(allResumeFiles);
+      console.log(`Successfully processed ${processedResumes.length} resumes.`);
+
+      if (processedResumes.length === 0) {
+          // This might happen if processing failed silently or returned empty
+          throw new Error("Resume processing returned no data. Cannot proceed with analysis.");
+      }
+
+
+      // --- Step 2: Start Analysis with Processed Data ---
+      console.log("Step 2: Starting analysis with processed data...");
       const { apiURL, apiHeaderName, apiKey } = getRARAPIConfig();
+      const analysisEndpoint = `${apiURL}/ai/rar/v1/analyze_and_rerank`;
       console.log(`Initiating Resume Analysis at: ${apiURL}/ai/rar/v1/analyze_and_rerank`);
 
       // PREPARE EXISTING JOBS TO BE A LIST OF DICTIONARY
-      const jobOpenings = await Promise.all(existingJobs.map(async (jobs) => {
+      const jobOpeningsPayload = await Promise.all(existingJobs.map(async (jobs) => {
         return {
           name: jobs.jobTitle,
           content: jobs.jobDescription
         };
       }));
 
-      // PREPARE CANDIDATE DATA TO BE A LIST OF DICTIONARY
-      const candidateResumes = await Promise.all(
-        candidates.map(async (candidate) => {
-          return Promise.all(
-            candidate.resumeFile.map(async (file) => {
-              const fileContent = await file.text(); // Extract text from the File object
-              return {
-                page_content: fileContent, // Assign extracted text
-                metadata: { source: file.name }, // Assign file name
-              };
-            })
-          );
-        })
-      );
-
-      // Flatten the nested array
-      const formattedCandidateResumes = candidateResumes.flat();
-  
-      console.log('--- Files to be processed: ', formattedCandidateResumes.map(f => f.metadata));
+      // PREPARE FINAL JSON PAYLOAD FOR THE ANALYSIS ENDPOINT
+      const analysisPayload = {
+        job_openings: jobOpeningsPayload,
+        resumes: processedResumes // Use the data from the processing step
+      };
       
+      console.log(`Initiating Analysis at: ${analysisEndpoint}`);
       // CALL THE API TO SEND REQUEST
       const response = await axios.post<InitialAPIResponse>(
-        `${apiURL}/ai/rar/v1/analyze_and_rerank`,
-        {job_openings: jobOpenings,
-         resumes: formattedCandidateResumes
-        },
+        analysisEndpoint,
+        analysisPayload,
         {
           headers: {
             'Accept': 'application/json',
@@ -293,9 +341,6 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
           }
         }
       );
-  
-      console.log(`--- Job Initiation API Response Status: ${response.status} ---`);
-      console.log(`--- Job Initiation API Response Data:`, response.data, '---');
   
       // Basic validation of the response structure
       if (!response.data || !response.data.trace_id) {
@@ -316,15 +361,14 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
    * @returns {Promise<JobStatus>} An object containing the current status, progress, and results (if completed).
    * @throws {Error} If the API call fails or the job is not found.
    */
-  export async function checkRARStatus(traceId: string): Promise<OverAllAPIStatus> {
+  export async function checkRARStatus(traceId: string): Promise<MJCAPIStatus> {
     if (!traceId) {
       throw new Error('Trace ID is required to check job status.');
     }
     try {
       const { apiURL, apiHeaderName, apiKey } = getRARAPIConfig();
-      console.log(`Checking RAR STATUS for trace ID: ${traceId} at: ${apiURL}/ai/rar/v1/status/${traceId}`);
   
-      const response = await axios.get<OverAllAPIStatus>(
+      const response = await axios.get<MJCAPIStatus>(
         `${apiURL}/ai/rar/v1/status/${traceId}`,
         {
           headers: {
@@ -333,8 +377,6 @@ export async function startJDWriter(newJobs: AddNewJobOpenings[]): Promise<Initi
           }
         }
       );
-  
-      console.log(`--- RAR Job Status API Response: ${response.status} ---`);
   
       // Validate the response structure based on JobStatus interface
        if (!response.data || typeof response.data.status !== 'string') {

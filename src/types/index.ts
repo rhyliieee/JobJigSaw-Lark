@@ -61,7 +61,65 @@ export interface BulkCandidateUpload {
     status?: 'pending' | 'processing' | 'completed' | 'error';
 }
 
+// INTERFACE FOR RESUME SCORES
+export interface ResumeScores {
+    skills_match: number;
+    experience_relevance: number;
+    education_fit: number;
+    cultural_fit: number;
+    overall_impression: number;
+}
+
+// INTERFACE FOR RESUME FEEDBACK
+export interface ResumeFeedback {
+    candidate_name: string;
+    analysis: string;
+    scores: ResumeScores;
+    total_score: number;
+    key_strengths: [string];
+    areas_for_improvement: [string];
+}
+
+// INTERFACE FOR CJC AGENT
+export interface JobResumeMatch {
+    job_description_name: string;
+    candidate_name: string;
+    match_score: number;
+    match_explanation: string;
+}
+
+// INTERFACE FOR CROSS JOB MATCH RESULTS
+export interface CrossJobMatchResult {
+    job_resume_matches: [JobResumeMatch];
+    best_matches_per_resume: {[key: string]: string};  // resume_name -> best_job_name
+    overall_recommendation: string;
+}
+
+// INTERFACE FOR MJC GRAPH RESULTS
+export interface MultiJobComparisonState {
+    job_openings: [{}];
+    resumes: [{}];
+    all_rankings: {[key: string]: [ResumeFeedback]};
+    final_recommendations: CrossJobMatchResult
+}
+
+/* API INTERFACE FOR MJC GRAPH API RESULTS */
+export interface MJCAPIStatus {
+    trace_id: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    progress: Record<string, string>;
+    results: MultiJobComparisonState;
+    error?: string | null;
+}
+
+
 /* GENERAL API INTERFACE */
+
+// INTERFACE FOR PROCESSING RESUME FILES
+export interface ProcessedResumeData {
+    page_content: string;
+    metadata: {[key: string]: any };
+}
 
 // INTERFACE FOR OVERALL API STATUS
 export interface OverAllAPIStatus {

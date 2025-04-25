@@ -84,7 +84,7 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
 
     const [checkedOpenings, setCheckedOpenings] = useState<string[]>([]);
     const [writeResults, setWriteResults] = useState<JobDescription[]>([]);
-    
+    const [isSelectAllChecked, setIsSelectAllChecked] = useState<boolean>(false);
     const [jobProgress, setJobProgress] = useState<Record<string, string>>({}); // Progress details per file
 
     // const extractAppToken = (url: string) => {
@@ -126,13 +126,43 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
     }, [existingJobOpenings, larkLoading, tableName]);
 
     // HANDLE CHOSEN JOB OPENINGS
-    const handleCheckboxChange = useCallback((value: string) => {
-        setCheckedOpenings((prevCheckedItems) =>
-            prevCheckedItems.includes(value)
-                ? prevCheckedItems.filter((item) => item !== value)
-                : [...prevCheckedItems, value]
-        );
-    }, []);
+    // const handleCheckboxChange = useCallback((value: string) => {
+    //     setCheckedOpenings((prevCheckedItems) =>
+    //         prevCheckedItems.includes(value)
+    //             ? prevCheckedItems.filter((item) => item !== value)
+    //             : [...prevCheckedItems, value]
+    //     );
+    // }, []);
+    const handleCheckboxChange = useCallback((jobTitle: string) => {
+        let newCheckedItems: string[];
+        setCheckedOpenings((prevCheckedItems) => {
+            if (prevCheckedItems.includes(jobTitle)) {
+                newCheckedItems = prevCheckedItems.filter((item) => item !== jobTitle);
+            } else {
+                newCheckedItems = [...prevCheckedItems, jobTitle];
+            }
+
+            // Update Select All state based on individual changes
+            if (newCheckedItems.length === existingJobs.length && existingJobs.length > 0) {
+                setIsSelectAllChecked(true);
+            } else {
+                setIsSelectAllChecked(false);
+            }
+            return newCheckedItems;
+        });
+    }, [existingJobs.length]); 
+
+    // HANDLE SELECT ALL CHECKBOX CHANGE
+    const handleSelectAllChange = useCallback((checked: boolean | 'indeterminate') => {
+        if (checked === true) {
+            const allJobTitles = existingJobs.map(job => job.jobTitle);
+            setCheckedOpenings(allJobTitles);
+            setIsSelectAllChecked(true);
+        } else {
+            setCheckedOpenings([]);
+            setIsSelectAllChecked(false);
+        }
+    }, [existingJobs]);
 
     // GET JOB DETAILS BASED ON CHECKEDOPENINGS
     const getSelectedJobs = useCallback(() => {
@@ -366,6 +396,8 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
     const handleContinueClick = () => {
         if (checkedOpenings.length > 0) {
             onContinue(selectedJobs); // Call the callback passed from App.tsx
+        } else {
+             toast.warning("No job openings selected", { description: "Please select at least one job opening to continue." });
         }
     };
 
@@ -388,6 +420,7 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
         <Tabs defaultValue="selectOpenings" className="w-full" value={activeTab} onValueChange={setActiveTab}>
             <Toaster richColors position="top-right" />
             <TabsList className="grid w-full grid-cols-2 bg-gray-200 text-[#111613]">
+            {/* <TabsList className="w-full bg-gray-200 text-[#111613]"> */}
                 <TabsTrigger value="selectOpenings" className="data-[state=active]:bg-white data-[state=active]:text-[#37A533] data-[state=active]:shadow-sm rounded-md cursor-pointer">
                 Choose Openings
                 </TabsTrigger>
@@ -404,8 +437,25 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
                         <CardDescription className="text-gray-600">Choose 1 or more Job Openings</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+
                     {existingJobOpenings.length > 0 ? (
                     <div className="space-y-2">
+                        
+                        {/* Select All Checkbox */}
+                        <div className="flex items-center space-x-2 pb-2 border-b border-gray-200 mb-2">
+                                <Checkbox
+                                    id="select-all-jobs"
+                                    checked={isSelectAllChecked}
+                                    onCheckedChange={handleSelectAllChange}
+                                    disabled={existingJobs.length === 0} // Disable if no jobs
+                                    className="data-[state=checked]:bg-[#37A533] data-[state=checked]:border-[#37A533] focus:ring-[#37A533]/50 cursor-pointer"
+                                />
+                                <Label htmlFor="select-all-jobs" className="text-[#111613] font-medium">
+                                    Select All ({existingJobs.length})
+                                </Label>
+                            </div>
+
+                            {/* Individual Job Checkboxes */}
                             {existingJobs.map((job) => (
                                 <div key={job.jobTitle} className="flex items-center space-x-2">
                                     <Checkbox
@@ -419,6 +469,20 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
                                     </Label>
                                 </div>
                             ))}
+
+                            {/* {existingJobs.map((job) => (
+                                <div key={job.jobTitle} className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={`job-opening-${job.jobTitle}`}
+                                        checked={checkedOpenings.includes(job.jobTitle)}
+                                        onCheckedChange={() => handleCheckboxChange(job.jobTitle)}
+                                        className="data-[state=checked]:bg-[#37A533] data-[state=checked]:border-[#37A533] focus:ring-[#37A533]/50 cursor-pointer"
+                                    />
+                                    <Label htmlFor={`job-opening-${job.jobTitle}`} className="text-[#111613]">
+                                        {job.jobTitle}
+                                    </Label>
+                                </div>
+                            ))} */}
                             {/* Accordion to show details of *selected* existing jobs */}
                             {selectedJobs.length > 0 && (
                                 <Accordion type="single" collapsible className="w-full mt-4 border-t border-gray-200 pt-4"> {/* Added padding top */}

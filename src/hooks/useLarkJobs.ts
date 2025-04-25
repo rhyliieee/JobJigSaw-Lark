@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { bitable, ITextField, ITable, ISingleSelectField, IAttachmentField, IRecordList } from '@lark-base-open/js-sdk';
+import { bitable, ITextField, ITable, ISingleSelectField, ICheckBoxField, IRecordList } from '@lark-base-open/js-sdk';
 // import { BaseClient } from '@lark-base-open/node-sdk'; 
-import { JobDescription, ExistingJobOpenings, FileWithContent } from '../types/index';
+import { JobDescription, ExistingJobOpenings } from '../types/index';
 
 // interface LarkUserCredentials {
 //     appToken: string;
@@ -30,7 +30,7 @@ export function useLarkBase() {
         setError(null);
         
         // Get the ①Recruitment Request Management table
-        const rrmTable = await bitable.base.getTableByName('①Recruitment Request Management Copy');
+        const rrmTable = await bitable.base.getTableByName('①Recruitment Request Management');
         if (!rrmTable) {
           setError('---FAILED TO GET ①Recruitment Request Management TABLE---');
           setLoading(false);
@@ -45,8 +45,9 @@ export function useLarkBase() {
         // Get all fields to map field names to field IDs
         const fields = await rrmTable.getFieldMetaList();
         
+        // console.log(`---FIELD NAMES IN THE TABLE: ${fields.map(field => field.name).join(', ')}---`);
         const fieldMapping: Record<string, string> = {};
-        const fieldsToSkip = ['HR Name', '③Recruitment Progress Management', 'Requester'];
+        const fieldsToSkip = ['HR Name', '③Recruitment Progress Management', 'Requester', 'Positions Filled'];
         // let positionFieldId: string | null = null;
 
         /**
@@ -67,11 +68,12 @@ export function useLarkBase() {
         for (const field of fields) {
           // SKIP FIELDS THAT ARE NOT REQUIRED
           if (fieldsToSkip.includes(field.name)){
+            console.log(`---SKIPPING FIELD: ${field.name}---`);
             continue;
           }
 
           // MAP FIELD NAMES TO FIELD IDs
-          if (field.name.toLowerCase().includes('position')) {
+          if (field.name.toLowerCase() === 'position') {
             fieldMapping['jobPosition'] = field.id
           } else if (field.name.toLowerCase().includes('job description')) {
             fieldMapping['jobDescription'] = field.id
@@ -91,26 +93,32 @@ export function useLarkBase() {
             fieldMapping['expectedStartDate'] = field.id;
           } else if (field.name.toLowerCase().includes('attachment')) {
             fieldMapping['attachment'] = field.id;
-          }else if (field.name.toLowerCase().includes('status')) {
+          } else if (field.name.toLowerCase().includes('status')) {
             fieldMapping['status'] = field.id;
+          } else if (field.name.toLowerCase() === 'active') {
+            fieldMapping['active'] = field.id;
           } else {
             fieldMapping[field.name] = field.id;
           }
-
         }
         
         setFieldMap(fieldMapping);
+        console.log(`---FIELD MAPPING: ${JSON.stringify(fieldMapping)}---`);
         
         // FETCH EXISTING JOB OPENINGS
-        if (rrmTable && (fieldMapping.jobPosition && recordList && fieldMapping.status)) {
+        if (rrmTable && (fieldMapping.jobPosition && recordList && fieldMapping.active)) {
           const fetchedOpenings: ExistingJobOpenings[] = []
           for await (const record of Array.from(recordList)) {
             try {
 
               // GET THE STATUS FIELD OF EVERY RECORD
-              const statusField = await rrmTable.getField<ISingleSelectField>(fieldMapping.status);
-              const statusCell = await statusField.getCellString(record.id);
-              const statusValue = statusCell;
+              // const statusField = await rrmTable.getField<ISingleSelectField>(fieldMapping.status);
+              // const statusCell = await statusField.getCellString(record.id);
+              // const statusValue = statusCell;
+
+              // GET THE ACTIVE FIELD VALUE OF EVERY RECORD
+              const activeField = await rrmTable.getField<ICheckBoxField>(fieldMapping.active);
+              const activeValue = await activeField.getValue(record.id);
 
               // GET JOB TITLE CELL
               const positionField = await rrmTable.getField<ITextField>(fieldMapping.jobPosition);
@@ -118,9 +126,10 @@ export function useLarkBase() {
               const positionValue = await positionCell.getValue();
               let title = 'Untitled Position'; // DEFAULT
 
+              console.log(`---${positionValue[0]} IS ${activeValue} HIRING---`);
               
               // SKIP RECORDS WITH STATUS VALUE 'not recruiting'
-              if (statusValue.toLowerCase().includes('not recruiting')) {
+              if (!activeValue) {
                 continue;
               }
               
