@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import LoadingIndicator from './LoadingIndicator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { MultiJobComparisonState, ResumeFeedback, JobResumeMatch, ResumeScores, BulkCandidateUpload } from '../types/index';
+import { MultiJobComparisonState, JobResumeMatch, BulkCandidateUpload } from '../types/index';
 import {useLarkCandidates} from '../hooks/useLarkCandidates';
 
 interface ResultsDisplayProps {
@@ -25,8 +25,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ isLoading, results, err
     const { 
         loading: larkLoading, 
         error: larkError, 
-        existingCandidates, 
-        saveAddedCandidates, 
         saveAnalyzedCandidates 
     } = useLarkCandidates()
 

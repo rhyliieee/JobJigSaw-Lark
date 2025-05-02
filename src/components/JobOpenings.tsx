@@ -71,7 +71,7 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
     
 
     // STATE FOR LOADING INDICATORS
-    const [isLoading, setIsLoading] = useState(false);
+    const [_isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null); // Error message to display
@@ -83,9 +83,9 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
     const [jdwResults, setJDWResults] = useState<JobDescription[]>([]);
 
     const [checkedOpenings, setCheckedOpenings] = useState<string[]>([]);
-    const [writeResults, setWriteResults] = useState<JobDescription[]>([]);
+    // const [writeResults, setWriteResults] = useState<JobDescription[]>([]);
     const [isSelectAllChecked, setIsSelectAllChecked] = useState<boolean>(false);
-    const [jobProgress, setJobProgress] = useState<Record<string, string>>({}); // Progress details per file
+    const [_jobProgress, setJobProgress] = useState<Record<string, string>>({}); // Progress details per file
 
     // const extractAppToken = (url: string) => {
     //     // Using regex
@@ -359,7 +359,7 @@ const JobOpenings: React.FC<JobOpeningsProps> = ({ onContinue}) => {
         try {
             // 1. INITIATE JDW API HEALTH CHECK (Optional but good practice)
             console.log("Performing API health check...");
-            const jdwHealthCheck = await jdwAPIHealthCheck(); // Assuming this throws on failure
+            jdwAPIHealthCheck(); // Assuming this throws on failure
             console.log("API health check successful.");
 
             // 2. CALL JDW API TO INITIATE THE PROCESS

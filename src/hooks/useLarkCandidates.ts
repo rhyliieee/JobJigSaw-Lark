@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { bitable, ITable, ITextField, IAttachmentField, IOpenSegmentType, IRecordValue, IOpenCellValue, ICell } from '@lark-base-open/js-sdk';
+import { bitable, ITable, ITextField, IAttachmentField, IOpenSegmentType, IRecordValue, IOpenCellValue } from '@lark-base-open/js-sdk';
 import { 
   ExistingCandidate, 
   AddNewCandidate, 
@@ -37,7 +37,7 @@ export function useLarkCandidates() {
         const fieldMapping: Record<string, string> = {};
         let nameFieldId: string | null = null;
         let positionFieldId: string | null = null;
-        let resumeFieldId: string | null = null;
+        // let resumeFieldId: string | null = null;
 
         for (const field of fields) {
           if (field.name.toLowerCase().includes('candidate name')) {
@@ -50,7 +50,7 @@ export function useLarkCandidates() {
             fieldMapping['cvRate'] = field.id;
           } else if (field.name.toLowerCase().includes('resume')) {
             fieldMapping['resume'] = field.id;
-            resumeFieldId = field.id;
+            // resumeFieldId = field.id;
           } else if (field.name.toLocaleLowerCase().includes("candidate's insight")) {
             fieldMapping['candidateInsight'] = field.id;
           } else if (field.name.toLocaleLowerCase().includes("potential gaps")) {

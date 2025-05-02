@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { bitable, ITextField, ITable, ISingleSelectField, ICheckBoxField, IRecordList } from '@lark-base-open/js-sdk';
+import { bitable, ITextField, ITable, ICheckBoxField, IRecordList } from '@lark-base-open/js-sdk';
 // import { BaseClient } from '@lark-base-open/node-sdk'; 
 import { JobDescription, ExistingJobOpenings } from '../types/index';
 
@@ -12,7 +12,7 @@ export function useLarkBase() {
   const [table, setTable] = useState<ITable>();
   // const [existingAttachment, setAttachment] = useState<IOpenAttachment[]>([]);
   const [existingJobOpenings, setExistingJobOpenings] = useState<ExistingJobOpenings[]>([]);
-  const [existingRecordList, setRecordList] = useState<IRecordList>();
+  const [_existingRecordList, setRecordList] = useState<IRecordList>();
   const [fieldMap, setFieldMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +230,7 @@ const updateRecords = async (jobDescriptions: JobDescription[]) => {
 
           if (fieldMap.jobPosition && job.job_title) {
               recordData[fieldMap.jobPosition] = job.job_title;
-              recordData[fieldMap.status] = "Not recruiting";
+              // recordData[fieldMap.status] = "Not recruiting"; // REMOVING STATUS FIELD SINCE IT WAS REMOVE FROM THE TABLE
           }
 
           if (fieldMap.jobDescription && job.finalized_job_description) {

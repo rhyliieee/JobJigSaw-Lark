@@ -2,7 +2,6 @@ import {
     OverAllAPIStatus, 
     InitialAPIResponse, 
     AddNewJobOpenings,
-    JobDescription,
     JDWAPIPayload,
     ExistingJobOpenings,
     BulkCandidateUpload,

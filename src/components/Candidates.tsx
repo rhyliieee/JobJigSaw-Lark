@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import {
     Tabs,
@@ -6,14 +6,14 @@ import {
     TabsList,
     TabsTrigger
 } from "@/components/ui/tabs";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+// import {
+//     Card,
+//     CardContent,
+//     CardDescription,
+//     CardFooter,
+//     CardHeader,
+//     CardTitle,
+// } from "@/components/ui/card";
 import {
     Accordion,
     AccordionContent,
@@ -27,14 +27,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast, Toaster } from 'sonner';
-import { ExistingCandidate, AddNewCandidate, ExistingJobOpenings, BulkCandidateUpload, MultiJobComparisonState } from '@/types/index';
+import { ExistingCandidate, ExistingJobOpenings, BulkCandidateUpload, MultiJobComparisonState } from '@/types/index';
 import LoadingIndicator from "./LoadingIndicator";
 import { useLarkCandidates } from '../hooks/useLarkCandidates'; 
-import { apiRARHealthCheck, startResumeAnalysis, checkRARStatus } from '../service/api';
+import { startResumeAnalysis, checkRARStatus } from '../service/api';
 
 
 // CONSTANTS FOR POLLING RAR STATUS
@@ -56,20 +56,20 @@ interface CandidatesProps {
 }
 
 const Candidates: React.FC<CandidatesProps> = ({ 
-    onContinue, 
+    // onContinue, 
     availableJobs, 
     onAnalysisStart,
     onAnalysisComplete,
     onAnalysisError
   }) => {
     const [activeTab, setActiveTab] = useState<string>("selectCandidates");
-    const [checkedCandidates, setCheckedCandidates] = useState<string[]>([]); // Store recordIds
+    // const [checkedCandidates, setCheckedCandidates] = useState<string[]>([]); // Store recordIds
 
     // STATE FOR ADDING NEW CANDIDATES
-    const [newCandidateName, setNewCandidateName] = useState<string>("");
-    const [newCandidatePosition, setNewCandidatePosition] = useState<string>("");
-    const [newCandidateResumeFile, setNewCandidateResumeFile] = useState<File | null>(null);
-    const [addedCandidates, setAddedCandidates] = useState<AddNewCandidate[]>([]); // Store locally added candidates
+    // const [newCandidateName, setNewCandidateName] = useState<string>("");
+    // const [newCandidatePosition, setNewCandidatePosition] = useState<string>("");
+    // const [newCandidateResumeFile, setNewCandidateResumeFile] = useState<File | null>(null);
+    // const [addedCandidates, setAddedCandidates] = useState<AddNewCandidate[]>([]); // Store locally added candidates
 
     // STATE FOR BULK CANDIDATE UPLOAD
     const [bulkPosition, setBulkPosition] = useState<string>("");
@@ -84,10 +84,10 @@ const Candidates: React.FC<CandidatesProps> = ({
 
     // State for UI feedback
     const [isSubmitting, setIsSubmitting] = useState(false); // For potential future API calls
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [, setErrorMessage] = useState<string | null>(null);
 
     // Use the dedicated hook for candidates
-    const { loading: larkLoading, error: larkError, existingCandidates, saveAddedCandidates } = useLarkCandidates();
+    const { loading: larkLoading, error: larkError } = useLarkCandidates();
 
     // Handle checkbox changes
     // const handleCheckboxChange = useCallback((recordId: string) => {

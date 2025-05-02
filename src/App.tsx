@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import './App.css';
 import { Toaster } from 'sonner';
-import { ExistingJobOpenings, ExistingCandidate, BulkCandidateUpload, MultiJobComparisonState } from './types/index'
+import { ExistingJobOpenings, BulkCandidateUpload, MultiJobComparisonState } from './types/index'
 import Footer from './components/CustomFooter'
 import JobOpenings from './components/JobOpenings';
 import Candidates from './components/Candidates'; // Import Candidates component
@@ -18,9 +18,9 @@ function App() {
   // State to track if the user has confirmed job opening selections
   // const [authCode, setAuthCode] = useState<string>('');
   // const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [jobOpeningsConfirmed, setJobOpeningsConfirmed] = useState<boolean>(false);
-  const [candidatesConfirmed, setCandidatesConfirmed] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [_jobOpeningsConfirmed, setJobOpeningsConfirmed] = useState<boolean>(false);
+//   const [candidatesConfirmed, setCandidatesConfirmed] = useState<boolean>(false);
+//   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // STATE FOR NAVIGATING
   const [hasProceededFromJobs, setHasProceededFromJobs] = useState<boolean>(false); 
@@ -28,8 +28,8 @@ function App() {
 
 
    // Store selected items (optional, could just use confirmed flags)
-   const [selectedJobs, setSelectedJobs] = useState<ExistingJobOpenings[]>([]);
-   const [selectedCandidates, setSelectedCandidates] = useState<ExistingCandidate[]>([]);
+   const [_selectedJobs, setSelectedJobs] = useState<ExistingJobOpenings[]>([]);
+//    const [selectedCandidates, setSelectedCandidates] = useState<ExistingCandidate[]>([]);
 
   // HOOK TO GET EXISTING JOBS
   const { loading: larkJobsLoading, error: larkJobsError, existingJobOpenings } = useLarkBase();
@@ -135,7 +135,7 @@ function App() {
   // };
 
   // Helper to get button classes based on state
-  const getButtonClasses = (tabName: Tab, isActive: boolean, isDisabled: boolean) => {
+  const getButtonClasses = (_tabName: Tab, isActive: boolean, isDisabled: boolean) => {
     let baseClasses = 'px-4 py-2 rounded mr-2 transition-colors duration-150 ease-in-out text-sm font-medium flex-grow sm:flex-grow-0 text-center'; // Added flex-grow for smaller screens
     if (isActive) {
       // Active tab: Accent background, light text
@@ -205,7 +205,7 @@ function App() {
           </header>
           <main className="container mx-auto bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-200">
               {/* Navigation Bar */}
-              <nav className="mb-4 border-b border-gray-120 pb-2 flex flex-wrap justify-center w-full sm:justify-start">
+              <nav className="mb-2 border-b border-gray-120 pb-2 flex flex-wrap justify-center w-full sm:justify-start">
                   <button
                       onClick={() => setActiveTab('jobOpenings')}
                       // Job Openings tab is always enabled once loaded
