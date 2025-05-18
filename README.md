@@ -1,10 +1,8 @@
 # JobJigSaw - Lark Base Integration Frontend
 
-A component of the [JobJigSaw](https://github.com/rhyliieee/JobJigSaw) suite, designed to generate professional and compelling job descriptions using AI.
+A component of the [JobJigSaw](https://github.com/rhyliieee/JobJigSaw) suite, which provides a frontend interface within Lark Base to interact with the JobJigSaw backend services for managing job openings and analyzing candidate resumes.
 
 ## Features
-
-This project provides a frontend interface within Lark Base to interact with the JobJigSaw backend services for managing job openings and analyzing candidate resumes. 
 
 1.  View and select existing job openings from a Lark Base table.
 2.  Add new job openings, which are processed by the Job Description Writer (JDW) agent and saved back to Lark Base.
